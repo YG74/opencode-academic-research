@@ -33,6 +33,7 @@ Three invariants:
 
 Exit codes: 0 on pass, 1 on any failure.
 """
+
 from __future__ import annotations
 
 import json
@@ -121,7 +122,7 @@ def read_frontmatter_name(rel_path: str) -> str | None:
         # than scanning the body — a `name:` in prose must NOT masquerade as the binding
         # (review finding). A missing/broken frontmatter is itself a drift the lint reports.
         return None
-    block = text[fences[0].end():fences[1].start()]
+    block = text[fences[0].end() : fences[1].start()]
     m = _NAME_RE.search(block)
     return m.group(1).strip().strip('"').strip("'") if m else None
 
@@ -177,11 +178,26 @@ def run_checks() -> list[str]:
     #     fail-open case we want to catch.
     declared = set(BUCKET_A_AGENT_FILES) | set(BUCKET_BCD_AGENT_FILES)
     undeclared = []
+
+    def _canonical_rel(path: Path) -> str:
+        """Workspace-relative POSIX path, with OpenCode port prefix normalized.
+
+        The port keeps the real skill directories under `skills/<name>/` and
+        exposes root-level symlinks (`deep-research -> skills/deep-research`,
+        etc.) for upstream scripts. A glob that sees the real directory tree
+        produces `skills/<name>/agents/...`; this helper maps it back to the
+        canonical upstream path `<name>/agents/...` used in the rosters.
+        """
+        rel = path.relative_to(REPO_ROOT).as_posix()
+        if rel.startswith("skills/"):
+            return rel[len("skills/") :]
+        return rel
+
     for md in REPO_ROOT.glob("**/agents/*.md"):
         if ".git" in md.parts:
             continue
         # .as_posix() so the comparison uses `/` on every OS (the rosters use `/`).
-        rel = md.relative_to(REPO_ROOT).as_posix()
+        rel = _canonical_rel(md)
         if rel in declared:
             continue  # directly rostered — skip the alias mapping (the common case)
         # Not directly rostered: map the two alias shapes documented above before
@@ -194,7 +210,7 @@ def run_checks() -> list[str]:
             canon = f"deep-research/agents/{md.name}"
         else:
             try:
-                canon = md.resolve().relative_to(REPO_ROOT).as_posix()
+                canon = _canonical_rel(md.resolve())
             except ValueError:
                 canon = rel  # resolves outside the repo (unexpected) — compare on rel only
         if canon not in declared:
@@ -257,7 +273,9 @@ def run_checks() -> list[str]:
     manifest = load_manifest()
     for key, entry in manifest.get("agents", {}).items():
         if entry.get("bucket") != "A":
-            errors.append(f"I4: manifest entry {key!r} has bucket={entry.get('bucket')!r}, expected 'A'.")
+            errors.append(
+                f"I4: manifest entry {key!r} has bucket={entry.get('bucket')!r}, expected 'A'."
+            )
         globs = entry.get("allowed_write_globs")
         if not isinstance(globs, list) or not globs:
             errors.append(f"I4: manifest entry {key!r} has empty/invalid allowed_write_globs.")
