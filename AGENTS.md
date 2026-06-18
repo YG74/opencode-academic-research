@@ -72,3 +72,17 @@ This repo tracks `https://github.com/timpara/academic-research-skills` as the `u
 ## Tone for written replies
 
 When a skill or command produces text the user will read (review comments, summaries, abstracts), use plain English at CEFR B1 level. Match the upstream project's tone: gentle, plain-spoken, no superlatives. The `humanizer` skill bundled at `~/.config/opencode/skills/humanizer/` (if present) should be applied to all narrative output.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs live as GitHub issues in `YG74/opencode-academic-research`. Use the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default mattpocock/skills vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context repo. Read `CONTEXT.md` at the root and `docs/adr/` for architectural decisions. See `docs/agents/domain.md`.
