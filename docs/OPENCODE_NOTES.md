@@ -44,9 +44,10 @@ Slash commands are markdown files under `commands/` with YAML frontmatter. Requi
 Recommended:
 
 - `agent` — which agent runs the command (`build`, `general`, `plan`). This port uses `build` since the commands may write files.
+- `model` — optional per-command model override (e.g. `vllm/qwen3.6`). OpenCode's command schema supports this field; the port uses it to map upstream's `model: sonnet` light-command routing.
 - `compatibility: opencode` — declares the command targets OpenCode.
 
-OpenCode does not support per-command model pinning the way Claude Code did. The active session model runs the command.
+OpenCode **does** support per-command model pinning through the `model:` frontmatter field. The active session model is used only when the command omits `model:`.
 
 ### Plugin discovery
 
@@ -60,12 +61,13 @@ Plugins are TypeScript files under `plugins/` exporting a `Plugin` from `@openco
 
 `@opencode-ai/plugin` exposes hooks including:
 
-- `session.created` — fires when a new session starts.
+- `session.created` — fires when a new session starts. This is notification-only; it cannot modify the system prompt.
 - `chat.message` — fires for each new user message.
 - `chat.params` — fires before sending the prompt to the model.
+- `experimental.chat.system.transform` — fires before every LLM request and lets a plugin mutate the assembled system prompt array in place.
 - `tool.execute.before` / `tool.execute.after` — fire around tool calls.
 
-The port's `plugins/ars-session-loaded.ts` uses `session.created` for parity with the upstream Claude Code `SessionStart` hook.
+The port's `plugins/ars-session-loaded.ts` uses `experimental.chat.system.transform` to prepend a concise ARS capability block on the first request of each session, which is the closest OpenCode equivalent to the upstream Claude Code `SessionStart` `additionalContext` injection.
 
 ### Runtime requirements
 
@@ -73,9 +75,9 @@ The plugin needs the `@opencode-ai/plugin` package installed at runtime. The rep
 
 ### Why a plugin and not a system prompt
 
-The upstream Claude Code `SessionStart` hook used `additionalContext` to inject text into the model's first prompt, listing the 13 commands and 3 plugin agents so the model knew they existed.
+OpenCode's plugin runtime does not support emitting `additionalContext` on session creation the way Claude Code does. The closest equivalent is `experimental.chat.system.transform`, which mutates the system prompt before each LLM request. The port uses that hook to inject a concise capability reminder on the first request of a session, so the model still knows the ARS feature set (environment flags, token budgets, slash commands) without relying on the discovery layer alone.
 
-OpenCode does **not** need this. The model sees commands and skills via OpenCode's built-in discovery layer; injecting them again in a system message would burn context for no benefit. The port plugin therefore only logs the suite load. If you want a visible startup banner, modify `plugins/ars-session-loaded.ts` to call `client.session.message` or similar.
+Note: `experimental.chat.system.transform` is marked experimental and may be replaced by V2 plugin "Context Sources". If it is removed, the fallback is to load the same text through `opencode.json` instructions (e.g. `ARS_CAPABILITIES.md`).
 
 ---
 

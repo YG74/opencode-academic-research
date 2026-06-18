@@ -40,15 +40,67 @@ Re-apply after sync: re-introduce the `_canonical_rel` helper and use it in
 place of `md.relative_to(REPO_ROOT).as_posix()` and
 `md.resolve().relative_to(REPO_ROOT).as_posix()` inside the I5 loop.
 
-## Remaining failures not caused by the directory layout
+## `hooks/run_guard.sh` and `scripts/announce-ars-loaded.sh` — restore upstream launchers
 
-After the above changes the following upstream tests still fail for reasons
-unrelated to the `skills/` layout:
+The upstream Claude Code plugin invokes the write-scope guard and session-start
+announce through POSIX shell launchers. Copy these files verbatim from upstream
+and commit them:
 
-- `scripts/test_eval_harness_workflow.py` (8 errors) — expects
-  `.github/workflows/eval-harness.yml`, which is not present in the port.
-- `scripts/test_check_v3_6_8_mark_read_commands.py::TestMarkReadCommandsLint::test_real_repo_passes` —
-  `commands/ars-mark-read.md` and `commands/ars-unmark-read.md` are missing the
-  required `model: sonnet` token.
-- `scripts/test_run_guard_launcher.py` (21 failures) — expects
-  `hooks/run_guard.sh`, which is not present in the port.
+- `hooks/run_guard.sh`
+- `scripts/announce-ars-loaded.sh`
+
+## `.claude/settings.json` — OMO-compatible hook registration
+
+Upstream declares the hooks in `hooks/hooks.json`, which oh-my-openagent (OMO)
+does not read. Instead, the port commits `.claude/settings.json` at the repo
+root with `pluginRoot: "."` so that `${CLAUDE_PLUGIN_ROOT}` resolves to the
+repo root for both `PreToolUse` and `SessionStart` commands.
+
+Re-apply after sync: if upstream changes `hooks/hooks.json`, mirror those
+changes into `.claude/settings.json` using the `pluginRoot` pattern.
+
+## `plugins/ars-session-loaded.ts` — OpenCode plugin context injection
+
+OpenCode does not support Claude Code's `additionalContext` emission on
+`SessionStart`. The port registers the legacy
+`experimental.chat.system.transform` hook and prepends a concise ARS capability
+reminder to the system prompt on the first request of each session. This is a
+best-effort parity measure; if OpenCode removes the hook, the fallback is to
+load the same text through `opencode.json` instructions (e.g.
+`ARS_CAPABILITIES.md`).
+
+## Command model routing
+
+OpenCode slash commands support an optional `model:` frontmatter field. The
+port maps upstream's `model: sonnet` light-command routing to the user's local
+model:
+
+- Light commands: `model: vllm/qwen3.6`
+- Heavy commands (`/ars-full`, `/ars-reviewer`, `/ars-revision-coach`): no
+  `model:` line, so they inherit the session model (e.g. `kimi-for-coding/k2p7`)
+
+`scripts/check_v3_6_8_mark_read_commands.py` and its unit test are patched to
+accept either `model: sonnet` or `model: vllm/qwen3.6`.
+
+## `.github/workflows/eval-harness.yml`
+
+The upstream eval-harness workflow is copied verbatim. The Python eval scripts
+already exist in the port; the workflow runs them on PRs touching scoring or
+generation logic.
+
+## Dependency pins
+
+- `rfc3339-validator>=0.1.4` is added to `pyproject.toml` so that
+  `jsonschema`'s `format=date-time` checks are actually enforced.
+- `pypdf` is listed under `dev` optional dependencies so the submission-package
+  verifier tests can run without being skipped.
+
+## Remaining known gaps
+
+- Marketplace install (`/plugin marketplace add`) has no OpenCode equivalent;
+  the port installs via `git clone + ./install.sh + bun install`.
+- Plugin-shipped agents (`agents/*`) exist as files but are not registered as
+  top-level agents the way Claude Code's plugin manifest does. OpenCode loads
+  them on demand through skill references.
+- The `.claude/CLAUDE.md` project instructions are replaced by `AGENTS.md` plus
+  the plugin-injected capability block.
