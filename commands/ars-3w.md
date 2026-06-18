@@ -1,6 +1,7 @@
 ---
 description: ARS deep-research `three-way-scan` mode — WHY / HOW / WHAT paper comparison
 agent: build
+model: vllm/qwen3.6
 compatibility: opencode
 ---
 

@@ -9,6 +9,7 @@ the 2 commands must exist, carry the validation rule (citation_key against
 Run from repo root:
     python3 scripts/check_v3_6_8_mark_read_commands.py
 """
+
 from __future__ import annotations
 
 import sys
@@ -20,12 +21,10 @@ REQUIRED_COMMANDS = ("ars-mark-read.md", "ars-unmark-read.md")
 # Tokens each command body MUST carry to preserve the user-visible contract.
 # Drift on any of these silently weakens the gate.
 REQUIRED_TOKENS = (
-    "literature_corpus",  # validation rule reference
-    "human_read_log",     # peer-file write target
-    "model: sonnet",      # routing per feedback_no_haiku.md
+    "literature_corpus",
+    "human_read_log",
 )
-
-# Enforce canonical CLI dispatch pattern (PR #197 local convention):
+REQUIRED_MODEL_ROUTING = ("model: sonnet", "model: vllm/qwen3.6")
 # Prose instructions are fragile; using a literal bash block with $ARGUMENTS
 # ensures deterministic argument parsing and shell-safe token handling.
 # This is a repo-local policy introduced by #197, not a §3.6 Step 7 spec rule.
@@ -41,13 +40,12 @@ def main(argv: list[str] | None = None) -> int:
         path = cmds_dir / cmd_name
         if not path.exists():
             errors.append(
-                f"commands/{cmd_name}: missing (spec §3.6 Step 7 acceptance: "
-                f"2 commands MUST exist)"
+                f"commands/{cmd_name}: missing (spec §3.6 Step 7 acceptance: 2 commands MUST exist)"
             )
             continue
-            
+
         body = path.read_text(encoding="utf-8")
-        
+
         # 1. Check for required tokens
         for token in REQUIRED_TOKENS:
             if token not in body:
@@ -55,8 +53,13 @@ def main(argv: list[str] | None = None) -> int:
                     f"commands/{cmd_name}: missing required token "
                     f"{token!r} (spec §3.6 Step 7 contract)"
                 )
-        
-        # 2. Check for canonical implementation block (Moved outside token loop)
+
+        if not any(route in body for route in REQUIRED_MODEL_ROUTING):
+            errors.append(
+                f"commands/{cmd_name}: missing required model routing "
+                f"{REQUIRED_MODEL_ROUTING!r} (spec §3.6 Step 7 contract)"
+            )
+
         if REQUIRED_BLOCK not in body:
             errors.append(
                 f"commands/{cmd_name}: missing compliant 'Implementation: ```bash' block "
@@ -68,10 +71,7 @@ def main(argv: list[str] | None = None) -> int:
             print(e, file=sys.stderr)
         return 1
 
-    print(
-        f"[v3.6.8 mark-read commands lint] PASSED "
-        f"({len(REQUIRED_COMMANDS)} command(s) scanned)"
-    )
+    print(f"[v3.6.8 mark-read commands lint] PASSED ({len(REQUIRED_COMMANDS)} command(s) scanned)")
     return 0
 
 

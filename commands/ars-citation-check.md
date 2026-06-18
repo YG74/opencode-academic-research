@@ -1,6 +1,7 @@
 ---
 description: ARS academic-paper `citation-check` mode — citation error report
 agent: build
+model: vllm/qwen3.6
 compatibility: opencode
 ---
 

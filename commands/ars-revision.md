@@ -1,6 +1,7 @@
 ---
 description: ARS academic-paper `revision` mode — revised draft + R&R responses
 agent: build
+model: vllm/qwen3.6
 compatibility: opencode
 ---
 

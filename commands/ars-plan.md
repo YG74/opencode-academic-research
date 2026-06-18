@@ -1,6 +1,7 @@
 ---
 description: ARS academic-paper `plan` mode — Socratic chapter-by-chapter planning
 agent: build
+model: vllm/qwen3.6
 compatibility: opencode
 ---
 

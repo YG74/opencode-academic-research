@@ -1,6 +1,7 @@
 ---
 description: ARS academic-paper `outline-only` mode — detailed outline + evidence map
 agent: build
+model: vllm/qwen3.6
 compatibility: opencode
 ---
 

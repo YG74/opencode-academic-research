@@ -1,6 +1,7 @@
 ---
 description: ARS academic-paper `rebuttal-audit` mode — QA an existing rebuttal draft against reviewer comments
 agent: build
+model: vllm/qwen3.6
 compatibility: opencode
 ---
 

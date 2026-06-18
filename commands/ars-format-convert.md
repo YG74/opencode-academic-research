@@ -1,6 +1,7 @@
 ---
 description: ARS academic-paper `format-convert` mode — convert to LaTeX / DOCX / PDF / Markdown
 agent: build
+model: vllm/qwen3.6
 compatibility: opencode
 ---
 

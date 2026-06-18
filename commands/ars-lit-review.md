@@ -1,6 +1,7 @@
 ---
 description: ARS academic-paper `lit-review` mode — annotated bibliography in paper format
 agent: build
+model: vllm/qwen3.6
 compatibility: opencode
 ---
 

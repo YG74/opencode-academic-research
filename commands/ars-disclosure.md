@@ -1,6 +1,7 @@
 ---
 description: ARS academic-paper `disclosure` mode — venue-specific AI-usage statement
 agent: build
+model: vllm/qwen3.6
 compatibility: opencode
 ---
 

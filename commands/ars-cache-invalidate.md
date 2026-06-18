@@ -1,6 +1,7 @@
 ---
 description: ARS /ars-cache-invalidate — drop cached verification entries for a citation key
 agent: build
+model: vllm/qwen3.6
 compatibility: opencode
 ---
 

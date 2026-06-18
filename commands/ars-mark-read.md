@@ -1,6 +1,7 @@
 ---
 description: ARS /ars-mark-read — record human-read signal for one or more citation keys
 agent: build
+model: vllm/qwen3.6
 compatibility: opencode
 ---
 

@@ -1,6 +1,7 @@
 ---
 description: ARS academic-paper `abstract-only` mode — bilingual abstract + keywords
 agent: build
+model: vllm/qwen3.6
 compatibility: opencode
 ---
 
