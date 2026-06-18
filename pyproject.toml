@@ -22,6 +22,7 @@ dependencies = [
     "pyyaml",
     "ruamel.yaml>=0.17",
     "jsonschema[format]>=4.17",
+    "rfc3339-validator>=0.1.4",
 ]
 
 [project.optional-dependencies]
