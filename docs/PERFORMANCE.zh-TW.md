@@ -1,6 +1,6 @@
 # ARS 效能說明
 
-> **建議模型：Claude Opus 4.7**，搭配 **Max plan**（或同等配置）。Opus 4.7 採用 adaptive thinking，不需要手動指定 thinking budget。
+> **建議模型：當前前沿推理模型**（Claude Opus 4.7 / GPT-5 Pro / Gemini 3.1 Pro 或同等級），搭配對應的高階方案。現行前沿模型多採用 adaptive thinking，不需要手動指定 thinking budget。
 >
 > 完整學術 pipeline（10 階段）會消耗**大量 token** — 單次完整執行可能超過 200K 輸入 + 100K 輸出 token，視論文長度和修訂輪數而定。請依預算斟酌使用。
 >
@@ -8,7 +8,7 @@
 
 ## 各模式 Token 消耗估算
 
-| Skill / 模式 | 輸入 Token | 輸出 Token | 估算費用（Opus 4.7）|
+| Skill / 模式 | 輸入 Token | 輸出 Token | 估算費用 |
 |---|---|---|---|
 | `deep-research` socratic | ~30K | ~15K | ~$0.60 |
 | `deep-research` full | ~60K | ~30K | ~$1.20 |
@@ -20,28 +20,31 @@
 | **完整 pipeline（10 階段）** | **~200K+** | **~100K+** | **~$4-6** |
 | + 跨模型驗證 | +~10K（外部）| +~5K（外部）| +~$0.60-1.10 |
 
-*以 ~15,000 字論文、~60 篇引用為基準估算。實際消耗隨論文長度、修訂輪數、對話深度而異。費用以 Anthropic API 2026 年 4 月定價計算。*
+*以 ~15,000 字論文、~60 篇引用為基準估算。實際消耗隨論文長度、修訂輪數、對話深度而異。費用以當前提供商 API 定價為基準；請當成數量級參考，不是精確報價。*
 
-## 建議 Claude Code 設定
+> **v3.11 引用查驗（#182）。** 確定性引用存在性 gate 呼叫的是外部書目 API（Semantic Scholar / OpenAlex / Crossref / arXiv），不是 LLM，因此**不增加上表的 Claude token 成本**——只在首次查詢時有網路延遲。持久化 SQLite cache（`~/.cache/ars/verification.db`，90 天 TTL）讓每篇論文只查驗一次、跨草稿重用；對已 cache 的書目重跑不做任何網路請求。見 [SETUP](SETUP.zh-TW.md#引用查驗-cachev3.11182)。
 
-| 設定 | 功能說明 | 啟用方式 | 官方文件 |
-|---|---|---|---|
-| **Agent Team**（選用） | 啟用 `TeamCreate` / `SendMessage` tools 做手動多 agent 協作。**ARS 內部平行化不需要這個 flag** — skills 透過內建 `Agent` tool 直接 spawn subagent。僅在你想手動跨 session 協作持久 team 時有用。 | 設定 `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`（研究預覽） | 實驗性功能 — 尚無穩定文件 |
-| **Skip Permissions** | 跳過每次工具使用的確認提示，實現全 pipeline 不中斷的自主執行 | 啟動時加上 `claude --dangerously-skip-permissions` | [Permissions](https://docs.anthropic.com/en/docs/claude-code/cli-reference) · [Advanced Usage](https://docs.anthropic.com/en/docs/claude-code/advanced) |
+## 建議 OpenCode 設定
 
-> **⚠️ Skip Permissions 注意事項**：此旗標會停用所有工具使用的確認對話框。請自行斟酌使用 — 在可信任的長時間 pipeline 中非常方便，但會移除手動審核的安全機制。僅在你確定接受 Claude 自動執行檔案讀寫、shell 指令等操作時才啟用。
+| 設定 | 功能說明 | 啟用方式 |
+|---|---|---|
+| **權限規則（Permission rules）** | 預先核准 pipeline 所需的 Bash、Read、Write、Edit 操作，讓 OpenCode 在長時間執行中不會每次工具呼叫都停下來詢問。 | 編輯 `~/.config/opencode/opencode.json`（或本 repo 附上的 `opencode.json`），在 `permission` 鍵下加入 ARS 工作流所需的 patterns。本 repo 已附上適合 ARS 的預設。 |
+| **模型選擇** | 讓派工工作階段與其 sub-agent 走你選定的提供商（Anthropic、OpenAI、GitHub Copilot 等）。 | 在 `opencode.json` 設定 `model`，或在工作階段開始時選擇。ARS skill 與模型無關，繼承父工作階段使用的模型。 |
+| **長時間模式** | OpenCode 沒有單一的「skip permissions」旗標。透過在 `permission.allow` 列出 pipeline 所需的操作模式，可以達到類似效果，但你是針對特定操作授權，而非整體關閉安全層。 | 見 `opencode.json` 與 `docs/OPENCODE_NOTES.md` 的建議 allow-list。 |
 
-### v3.7.0 Plugin agent 與模型路由
+> **安全提醒：** OpenCode 的權限模型是 allow-list 導向。只加入 ARS 實際需要的 patterns（Bash 用於驗證腳本、Read/Write/Edit 用於工作目錄）。避免在 Bash 上使用 `*` 萬用字元，除非你信任 pipeline 中的所有內容。
 
-當 ARS 以 Claude Code plugin 方式安裝（`/plugin install academic-research-skills`）時，會把三個下游 worker agent 暴露為 plugin-shipped subagent：`synthesis_agent`、`research_architect_agent`、`report_compiler_agent`。三個 agent frontmatter 都標 `model: inherit`，意思是它們**繼承派工 session 的模型**而非寫死特定 floor：
+### Plugin agent 與模型路由（v3.7.0+ 繼承）
 
-- Opus session 跑完整 pipeline 時 agent 是 Opus，保留這三個 agent 設計的整合深度。
-- Sonnet session 取得 Sonnet agent，跟主 session cost / latency 對齊。
-- Agent 永遠不會默默掉到 Haiku — `inherit` 走的是主 session 模型，主 session 本身又被「ARS 全程不用 Haiku」政策守住。
+三個下游 worker agent 以獨立定義出貨：`synthesis_agent`、`research_architect_agent`、`report_compiler_agent`。它們的 frontmatter 標示 `model: inherit`，表示繼承**派工工作階段的模型**，而非釘選特定 floor：
 
-意涵：**plugin agent 的 token 成本完全跟著上表各模式估算走，沒有額外加減**。dispatched agent 跟主 session 同一個模型，主 session 已經付的成本沒有再多一層 plugin agent 收費。如果 pipeline 中途換模型（例如 revision pass 改用 Sonnet 省成本），下一輪 agent 派工自動跟上。
+- 高階模型工作階段跑完整 pipeline 時，agent 使用高階模型，保留這三個 agent 設計的整合深度。
+- 中階模型工作階段取得中階 agent，與父工作階段的成本 / 延遲對齊。
+- Agent 永遠不會默默掉到低階模型 — `inherit` 走的是父工作階段模型，父工作階段本身又被「ARS 全程不使用低階模型」政策守住。
 
-其他 ARS agent（`bibliography_agent`、`literature_strategist_agent` 等）在 v3.7.0 不暴露為 plugin agent；它們仍是 in-skill prompt template，由主 session 內聯執行，沒有獨立的模型路由層。更廣的 plugin agent 覆蓋留到後續版本。
+意涵：**agent token 成本完全跟著上表各模式估算走，沒有額外加減**。dispatched agent 與父工作階段使用同一模型，父工作階段已付的成本不會再多一層 agent 收費。如果 pipeline 中途換模型（例如 revision pass 改用便宜模型省成本），下一輪 agent 派工自動跟上。
+
+其他 ARS agent（`bibliography_agent`、`literature_strategist_agent` 等）在此版本未以獨立 sub-agent 暴露；它們仍是 in-skill prompt template，由主工作階段內聯執行，沒有獨立模型路由層。更廣的 sub-agent 覆蓋留到後續版本。
 
 ## 長時間 session 管理
 
@@ -80,7 +83,7 @@ Schema 13 sprint contract 把每個 reviewer agent 切成 Phase 1（不見論文
 
 1. Session A 跑完一個 stage 到 FULL checkpoint。
 2. 從 checkpoint 通知抄下 `[PASSPORT-RESET: hash=<hash>, stage=<completed>, next=<next>]` tag。
-3. 開新的 Claude Code session（session B），貼入 `resume_from_passport=<hash>`。支援可選覆蓋：`resume_from_passport=<hash> stage=<n> mode=<m>`。
+3. 開新的 OpenCode session（session B），貼入 `resume_from_passport=<hash>`。支援可選覆蓋：`resume_from_passport=<hash> stage=<n> mode=<m>`。
 4. Session B 只讀 passport ledger，不重播 session A 的對話。Orchestrator 找到相符的 `kind: boundary` entry，append 一個 `kind: resume` entry 完成消費，然後繼續。繼續的 stage 由以下順序決定：使用者在 resume 指令附上 `stage=` 時以其為準，否則當 boundary 帶 `pending_decision` 時由 orchestrator 先重新詢問使用者再用對應選項的 `next_stage`，否則才採用記錄的 `next` 欄位。所有選項都終止時，`next` 可以是 `null`。
 
 **何時重置比延續划算：**
@@ -105,9 +108,9 @@ Resume 指令只定義 hash 與可選的 stage/mode 覆蓋：
 resume_from_passport=<hash> [stage=<n>] [mode=<m>]
 ```
 
-Resume 指令本身沒有路徑語法。客製 passport 位置在專案的 `CLAUDE.md` 設定，或由整合方的工具在呼叫 orchestrator 前處理。
+Resume 指令本身沒有路徑語法。客製 passport 位置在專案的 `AGENTS.md`（上游 Claude Code 安裝則是 `CLAUDE.md`）設定，或由整合方的工具在呼叫 orchestrator 前處理。
 
-**實測 token 節省：** 尚待真實 `systematic-review` 搭配儀器化測量。取得實測資料後會回填本節。目前不做任何數值宣稱。完整協議見 [`../academic-pipeline/references/passport_as_reset_boundary.md`](../academic-pipeline/references/passport_as_reset_boundary.md)。
+**實測 token 節省：** 尚待真實 `systematic-review` 搭配儀器化測量。取得實測資料後會回填本節。目前不做任何數值宣稱。完整協議見 [`../skills/academic-pipeline/references/passport_as_reset_boundary.md`](../skills/academic-pipeline/references/passport_as_reset_boundary.md)。
 
 ## 文獻語料庫導入（v3.6.4+）
 
@@ -130,9 +133,9 @@ Material Passport 的 `literature_corpus[]` 欄位由**使用者自行撰寫的 
 
 ### 消費端整合
 
-v3.6.5 起，Phase 1 兩個文獻 agent 透過 **corpus-first、search-fills-gap** 流程讀取 `literature_corpus[]`：`deep-research/agents/bibliography_agent.md` 與 `academic-paper/agents/literature_strategist_agent.md`。兩者走相同的五步流程與四條 Iron Rule（Same criteria / No silent skip / No corpus mutation / Graceful fallback on parse failure）。Search Strategy 報告新增 PRE-SCREENED 可重現區塊，列出已納入／排除／略過的 corpus entry，並含 F3 zero-hit 與 F4 provenance 報告。消費端啟動採 presence-based — passport 帶非空 `literature_corpus[]` 且解析成功時自動進入；解析失敗時 fallback 到 external-DB-only flow，並 surface `[CORPUS PARSE FAILURE]`。
+v3.6.5 起，Phase 1 兩個文獻 agent 透過 **corpus-first、search-fills-gap** 流程讀取 `literature_corpus[]`：`skills/deep-research/agents/bibliography_agent.md` 與 `skills/academic-paper/agents/literature_strategist_agent.md`。兩者走相同的五步流程與四條 Iron Rule（Same criteria / No silent skip / No corpus mutation / Graceful fallback on parse failure）。Search Strategy 報告新增 PRE-SCREENED 可重現區塊，列出已納入／排除／略過的 corpus entry，並含 F3 zero-hit 與 F4 provenance 報告。消費端啟動採 presence-based — passport 帶非空 `literature_corpus[]` 且解析成功時自動進入；解析失敗時 fallback 到 external-DB-only flow，並 surface `[CORPUS PARSE FAILURE]`。
 
-完整 consumer 協定見 [`academic-pipeline/references/literature_corpus_consumers.md`](../academic-pipeline/references/literature_corpus_consumers.md)。`citation_compliance_agent` 的 corpus 整合留到 v3.6.6+。
+完整 consumer 協定見 [`skills/academic-pipeline/references/literature_corpus_consumers.md`](../skills/academic-pipeline/references/literature_corpus_consumers.md)。`citation_compliance_agent` 的 corpus 整合留到 v3.6.6+。
 
 ### v3.6.5 corpus consumer 成本（presence 觸發）
 

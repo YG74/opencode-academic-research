@@ -1,6 +1,6 @@
 # ARS Performance Notes
 
-> **Recommended model: Claude Opus 4.7** with **Max plan** (or equivalent configuration). Opus 4.7 uses adaptive thinking; you no longer set a fixed thinking budget.
+> **Recommended model: a current frontier reasoning model (Claude Opus 4.7 / GPT-5 Pro / Gemini 3.1 Pro or equivalent)** with **Max plan** (or equivalent configuration). Opus 4.7 uses adaptive thinking; you no longer set a fixed thinking budget.
 >
 > The full academic pipeline (10 stages) consumes a **large amount of tokens** — a single end-to-end run can exceed 200K input + 100K output tokens depending on paper length and revision rounds. Budget accordingly.
 >
@@ -20,7 +20,9 @@
 | **Full pipeline (10 stages)** | **~200K+** | **~100K+** | **~$4-6** |
 | + Cross-model verification | +~10K (external) | +~5K (external) | +~$0.60-1.10 |
 
-*Estimates based on a ~15,000-word paper with ~60 references. Actual usage varies with paper length, revision rounds, and dialogue depth. Costs at Anthropic API pricing as of April 2026.*
+*Estimates based on a ~15,000-word paper with ~60 references. Actual usage varies with paper length, revision rounds, and dialogue depth. Costs at current provider API pricing; treat as order-of-magnitude anchors.*
+
+> **v3.11 citation verification (#182).** The deterministic citation-existence gate calls external bibliographic APIs (Semantic Scholar / OpenAlex / Crossref / arXiv), not the LLM, so it adds **no token cost** to the figures above — only network latency on first lookup. The persistent SQLite cache (`~/.cache/ars/verification.db`, 90-day TTL) means each paper is verified once and reused across drafts; a re-run over an already-cached bibliography does no network work. See [SETUP](SETUP.md#citation-verification-cache-v3.11-182).
 
 ## Recommended OpenCode settings
 
@@ -108,7 +110,7 @@ resume_from_passport=<hash> [stage=<n>] [mode=<m>]
 
 There is no path syntax on the resume command itself. Custom passport locations are configured in the project's `AGENTS.md` (or `CLAUDE.md` on upstream Claude Code installs) or handled by the integrator's tooling before the orchestrator is invoked.
 
-**Empirical token savings:** measurement pending a real `systematic-review` run with instrumentation. This section will be updated with observed token deltas once available; until then, no numeric claim is made. See [`../academic-pipeline/references/passport_as_reset_boundary.md`](../academic-pipeline/references/passport_as_reset_boundary.md) for the full protocol.
+**Empirical token savings:** measurement pending a real `systematic-review` run with instrumentation. This section will be updated with observed token deltas once available; until then, no numeric claim is made. See [`../skills/academic-pipeline/references/passport_as_reset_boundary.md`](../skills/academic-pipeline/references/passport_as_reset_boundary.md) for the full protocol.
 
 ## Literature corpus ingestion (v3.6.4+)
 
@@ -131,9 +133,9 @@ These boundaries are deliberate and reflect the ARS data-layer decision: ARS is 
 
 ### Consumer-side integration
 
-As of v3.6.5, two Phase 1 literature agents read `literature_corpus[]` via the **corpus-first, search-fills-gap** flow: `deep-research/agents/bibliography_agent.md` and `academic-paper/agents/literature_strategist_agent.md`. Both consumers follow the same five-step shared flow and four Iron Rules (Same criteria / No silent skip / No corpus mutation / Graceful fallback on parse failure). Search Strategy reports gain a PRE-SCREENED reproducibility block that enumerates included / excluded / skipped corpus entries with F3 zero-hit and F4 provenance reporting. Consumer integration is presence-based — auto-engages when the passport carries a non-empty `literature_corpus[]` and parses cleanly; parse failures fall back to external-DB-only flow with a `[CORPUS PARSE FAILURE]` surface.
+As of v3.6.5, two Phase 1 literature agents read `literature_corpus[]` via the **corpus-first, search-fills-gap** flow: `skills/deep-research/agents/bibliography_agent.md` and `skills/academic-paper/agents/literature_strategist_agent.md`. Both consumers follow the same five-step shared flow and four Iron Rules (Same criteria / No silent skip / No corpus mutation / Graceful fallback on parse failure). Search Strategy reports gain a PRE-SCREENED reproducibility block that enumerates included / excluded / skipped corpus entries with F3 zero-hit and F4 provenance reporting. Consumer integration is presence-based — auto-engages when the passport carries a non-empty `literature_corpus[]` and parses cleanly; parse failures fall back to external-DB-only flow with a `[CORPUS PARSE FAILURE]` surface.
 
-See [`academic-pipeline/references/literature_corpus_consumers.md`](../academic-pipeline/references/literature_corpus_consumers.md) for the full consumer protocol. `citation_compliance_agent` corpus integration is deferred (target version TBD post-v3.8).
+See [`skills/academic-pipeline/references/literature_corpus_consumers.md`](../skills/academic-pipeline/references/literature_corpus_consumers.md) for the full consumer protocol. `citation_compliance_agent` corpus integration is deferred (target version TBD post-v3.8).
 
 ### v3.6.5 corpus consumer cost (presence-gated)
 

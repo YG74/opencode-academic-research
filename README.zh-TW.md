@@ -1,26 +1,27 @@
 # Academic Research Skills for OpenCode
 
-[![Version](https://img.shields.io/badge/version-v3.9.4.2--opencode.1-blue)](https://github.com/timpara/opencode-academic-research/releases)
+[![Version](https://img.shields.io/badge/version-v3.13.0--opencode.1-blue)](https://github.com/YG74/opencode-academic-research/releases)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20696614.svg)](https://doi.org/10.5281/zenodo.20696614)
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/license-CC%20BY--NC%204.0-lightgrey)](https://creativecommons.org/licenses/by-nc/4.0/)
-[![Upstream](https://img.shields.io/badge/upstream-academic--research--skills-orange)](https://github.com/timpara/academic-research-skills)
+[![Upstream](https://img.shields.io/badge/upstream-academic--research--skills-orange)](https://github.com/Imbad0202/academic-research-skills)
 
 [English](README.md) | [简体中文版](README.zh-CN.md) | [日本語版](README.ja-JP.md)
 
-一套完整的學術研究 [OpenCode](https://opencode.ai) 技能包，涵蓋從研究到論文出版的全流程。
+一套 [OpenCode](https://opencode.ai) 學術研究技能包，包含 slash commands 與外掛，涵蓋從文獻回顧到可投稿論文的全流程。
 
-本 repo 是 [`timpara/academic-research-skills`](https://github.com/timpara/academic-research-skills) 的 OpenCode 移植版，而 `timpara/academic-research-skills` 又是 **Cheng-I Wu**（[Imbad0202/academic-research-skills](https://github.com/Imbad0202/academic-research-skills)）原版 Claude Code plugin 的 fork。所有的 workflow 內容、agent prompts、Python 驗證腳本都來自上游；移植版只把 Claude Code 的 plugin packaging 換成 OpenCode 的檔案式 skill / command / plugin 自動發現機制。
+本倉庫是 [`timpara/academic-research-skills`](https://github.com/timpara/academic-research-skills) 的 OpenCode 移植版，後者是 Cheng-I Wu（[Imbad0202](https://github.com/Imbad0202)）原創 OpenCode 外掛的分支。所有工作流內容、agent prompt 與 Python 驗證腳本均來自上游；本移植版僅將 OpenCode 外掛打包替換為 OpenCode 基於檔案的 skill / command / plugin 發現機制。
 
-**一分鐘內安裝**（OpenCode 0.x 以上）：
+**1 分鐘內安裝**（OpenCode 0.x 或更高版本）：
 
 ```bash
-git clone https://github.com/timpara/opencode-academic-research.git
+git clone https://github.com/YG74/opencode-academic-research.git
 cd opencode-academic-research
-./install.sh   # 把 skills/、commands/、plugins/ symlink 進 ~/.config/opencode/
-bun install    # 安裝 @opencode-ai/plugin（給 session-loaded plugin 用）
-uv sync --extra dev  # 安裝 Python 驗證腳本的 deps
+./install.sh   # 將 skills/、commands/、plugins/ 軟鏈到 ~/.config/opencode/
+bun install    # 安裝 session-loaded 外掛依賴
+uv sync --extra dev  # 安裝 Python 驗證腳本依賴
 ```
 
-裝完打開 OpenCode 跑 `/ars-plan`，ARS 會用蘇格拉底對話幫你規劃章節結構。需要逐步說明請看 [快速安裝](#快速安裝)。
+安裝完成後打開 OpenCode 並跑 `/ars-plan`，ARS 會用蘇格拉底對話幫你規劃章節結構。需要前置條件或分步安裝請看 [快速安裝](#快速安裝)。
 
 > **AI 是你的副駕駛，不是機長。** 這工具不會幫你寫論文。它處理苦工 — 搜文獻、排格式、驗數據、查邏輯一致性 — 讓你專注在真正需要你腦子的事：定義問題、選方法、詮釋數據的意義、寫出「我認為」後面那句話。
 >
@@ -30,7 +31,7 @@ uv sync --extra dev  # 安裝 Python 驗證腳本的 deps
 
 Lu 等人（2026，*Nature* 651:914-919）發表的 **The AI Scientist** 是第一個端到端全自動的 AI 研究系統，其生成的論文通過 ICLR 2025 workshop 的盲審（評分 6.33/10，workshop 平均 4.87）。他們自己的 Limitations 段落也列出了這類系統會遇到的結構性失敗模式：實作錯誤、幻覺實驗結果、取巧特徵依賴、實作錯誤被包裝成「意外發現」、方法論偽造、框架鎖定、引用幻覺。
 
-ARS 建立在這個前提上：**人類研究者 + AI 的組合，比純自動或純人工都更能避開這些失敗模式**。Stage 2.5 與 Stage 4.5 誠信閘門執行 7 類阻斷式檢查清單（見 [`academic-pipeline/references/ai_research_failure_modes.md`](academic-pipeline/references/ai_research_failure_modes.md)），reviewer 也提供 opt-in 的 calibration mode 用使用者自備的 gold set 測量 FNR/FPR。
+ARS 建立在這個前提上：**人類研究者 + AI 的組合，比純自動或純人工都更能避開這些失敗模式**。Stage 2.5 與 Stage 4.5 誠信閘門執行 7 類阻斷式檢查清單（見 [`skills/academic-pipeline/references/ai_research_failure_modes.md`](skills/academic-pipeline/references/ai_research_failure_modes.md)），reviewer 也提供 opt-in 的 calibration mode 用使用者自備的 gold set 測量 FNR/FPR。
 
 [**Zhao 等人**](https://arxiv.org/abs/2605.07723)（2026-05）盤點了 arXiv、bioRxiv、SSRN、PMC 上 250 萬篇論文裡的 1.11 億筆引用，保守估計 2025 年單年就有 146,932 筆幻覺引用，並觀察到 2024 年中是上升的拐點；bioRxiv-to-PMC 這條配對的「預印本進到正式發表」幻覺存活率達 85.3%。他們把「真實引用被用來支撐被引文獻其實沒有提出的主張」描述為當前未解的問題。ARS v3.7.1 為來源 provenance 加上 trust-chain frontmatter，v3.7.3 為未來的 claim-level 稽核鋪上 locator 基礎建設（三層引用 anchor），並在引用時段帶出 advisory 風險訊號（ARS 內部把這條 claim-faithfulness 缺口標記為「L3」，此為 ARS 的用詞，不是論文的用詞）。v3.7.x 的設計動機來自 Zhao 等人的 corpus-scale 發現；ARS 本身的 corpus-scale 評估仍是未來工作。
 
@@ -42,7 +43,7 @@ v3.3 的靈感來自 [**PaperOrchestra**](https://arxiv.org/abs/2604.05018)（So
 
 ## 架構與 pipeline
 
-**👉 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — 完整 pipeline 視圖：流程圖、階段 × 維度矩陣、資料存取流、skill 依賴圖、品質閘門、模式清單。
+**[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — 完整 pipeline 視圖：流程圖、階段 × 維度矩陣、資料存取流、skill 依賴圖、品質閘門、模式清單。
 
 這份架構文件取代了原本散在 README 各處的 pipeline 描述。關於「哪個階段跑什麼」的所有資訊都集中在一個地方。
 
@@ -50,40 +51,40 @@ v3.3 的靈感來自 [**PaperOrchestra**](https://arxiv.org/abs/2604.05018)（So
 
 **前置條件**
 
-- [OpenCode](https://opencode.ai) 已安裝並登入（`opencode auth login`）
-- [`bun`](https://bun.sh) — TypeScript plugin 需要
-- [`uv`](https://docs.astral.sh/uv/) — Python 驗證腳本需要
-- 你選的模型供應商的 API key（Anthropic、OpenAI、GitHub Copilot 都行）
+- [OpenCode](https://opencode.ai) 已安裝並完成認證（`opencode auth login`）
+- [`bun`](https://bun.sh) — TypeScript 外掛執行環境
+- [`uv`](https://docs.astral.sh/uv/) — Python 驗證腳本套件管理器
+- 你選用的模型 API key（Anthropic、OpenAI、GitHub Copilot 等任何 OpenCode 支援的提供商）
 - *選用：* Pandoc 用於 DOCX 輸出，tectonic + 思源宋體 TC 用於 APA 7.0 PDF（純 Markdown 輸出兩個都不需要）
 
 **安裝步驟**
 
 ```bash
-# 1. Clone
-git clone https://github.com/timpara/opencode-academic-research.git
+# 1. 克隆
+git clone https://github.com/YG74/opencode-academic-research.git
 cd opencode-academic-research
 
-# 2. Symlink 進 OpenCode config
+# 2. 軟鏈到 OpenCode 設定
 ./install.sh
 
-# 3. 安裝 plugin runtime
+# 3. 安裝外掛執行環境
 bun install
 
-# 4. 安裝 Python 驗證 deps
+# 4. 安裝 Python 驗證依賴
 uv sync --extra dev
 ```
 
-`install.sh` 把 `~/.config/opencode/{skills,commands,plugins}/` symlink 到本 repo，所以你在這裡改檔案，下一個 OpenCode session 就會看到變動。
+`install.sh` 會將 `~/.config/opencode/{skills,commands,plugins}/` 軟鏈到本倉庫，OpenCode 即可自動發現。在此倉庫修改檔案，下一次 OpenCode 會話即生效。
 
-**驗證可用：** 打開 OpenCode 跑 `/ars-plan` 並描述你正在寫的論文，ARS 會用蘇格拉底對話幫你規劃章節結構。想要單次測試的話改跑 `/ars-lit-review "你的主題"`。
+**驗證可用：** 打開 OpenCode 並跑 `/ars-plan`，然後描述你正在寫的論文，ARS 會用蘇格拉底對話幫你規劃章節結構。想要單次測試的話改跑 `/ars-lit-review "你的主題"`。
 
-**👉 [docs/SETUP.md](docs/SETUP.md)** — 完整指南：安裝 OpenCode、設定供應商 key、選用的 Pandoc/tectonic（DOCX/PDF）、跨模型驗證（`ARS_CROSS_MODEL`），以及三種安裝方式。
+**[docs/SETUP.zh-TW.md](docs/SETUP.zh-TW.md)** — 完整指南：安裝 OpenCode、設定提供商 key、選用的 Pandoc / tectonic（DOCX / PDF）、跨模型驗證（`ARS_CROSS_MODEL`），以及三種安裝方式（`install.sh` 軟鏈、手動軟鏈、全域複製）。
 
-**用原版 Claude Code plugin？** 上游持續支援於 [`Imbad0202/academic-research-skills`](https://github.com/Imbad0202/academic-research-skills)（以及維護 fork [`timpara/academic-research-skills`](https://github.com/timpara/academic-research-skills)）。Workflow 內容相同，差異只在 packaging。
+**使用原版 OpenCode 外掛？** 上游仍在維護：[`Imbad0202/academic-research-skills`](https://github.com/Imbad0202/academic-research-skills)（以及維護分支 [`timpara/academic-research-skills`](https://github.com/timpara/academic-research-skills)）。工作流內容相同，僅打包方式不同。
 
 ## 效能與費用
 
-**👉 [docs/PERFORMANCE.zh-TW.md](docs/PERFORMANCE.zh-TW.md)** — 各模式 token 預算、完整 pipeline 估算（~$4–6 for 一篇 15k 字論文），以及建議的 OpenCode 設定。
+**[docs/PERFORMANCE.zh-TW.md](docs/PERFORMANCE.zh-TW.md)** — 各模式 token 預算、完整 pipeline 估算（一篇 15k 字論文約 ~$4–6），以及建議的 OpenCode 設定。
 
 ## 使用指南與文章
 
@@ -102,6 +103,7 @@ uv sync --extra dev
 - **任務類型標註**（v3.3.2+）— 每個 skill 宣告 `task_type`（`open-ended` 或 `outcome-gradable`）。目前 ARS 所有 skills 皆為 `open-ended`。
 - **Benchmark 報告 Schema**（v3.3.5+）— JSON Schema + lint script，要求誠實的 benchmark 比較報告。詳見 [`shared/benchmark_report_pattern.md`](shared/benchmark_report_pattern.md)。
 - **Artifact 可重現性 Lockfile**（v3.3.5+）— Material Passport 新增可選 `repro_lock` 子區塊。**是設定文件化，不是重播保證** — LLM 輸出不是位元可重現。詳見 [`shared/artifact_reproducibility_pattern.md`](shared/artifact_reproducibility_pattern.md)。
+- **實驗來源憑證登錄**（#260）— Material Passport 可選的 `experiment_provenance[]` 記錄研究者在**外部**跑過的實驗（ARS 從不執行實驗），論文宣稱透過 `claim_intent_manifest.planned_experiment_ids[]` 與之 join。誠信 gate（Stage 2.5/4.5）逐條比對實驗支撐型宣稱與登錄憑證 — `ALIGNED` / `OVERSTATED` / `NOT_SUPPORTED_BY_PROVENANCE` / `PROVENANCE_INSUFFICIENT` — **但不判定實驗本身是否正確**。fail-closed 的 `experiment_intake_declaration` 讓「有沒有跑實驗」成為 Stage 1 明確決定。詳見 [`shared/handoff_schemas.md`](shared/handoff_schemas.md)。
 
 ---
 
@@ -166,7 +168,7 @@ ARS Stage 2 寫作      →  用驗證過的實驗結果撰寫論文
 
 ### 個別 Skill 使用
 
-#### Deep Research（深度研究，7 種模式）
+#### Deep Research（深度研究，8 種模式）
 
 ```
 "研究 AI 對高等教育的影響"                    → full mode（完整研究）
@@ -178,7 +180,7 @@ ARS Stage 2 寫作      →  用驗證過的實驗結果撰寫論文
 "審查這篇論文的研究品質"                      → review mode（論文審查）
 ```
 
-#### Academic Paper（學術論文撰寫，10 種模式）
+#### Academic Paper（學術論文撰寫，11 種模式）
 
 ```
 "幫我寫一篇論文"                              → full mode（完整撰寫）
@@ -247,19 +249,19 @@ ARS Stage 2 寫作      →  用驗證過的實驗結果撰寫論文
 
 各 agent 的職責與各階段產出物現已移至 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。版本號保留在此以維持 release metadata 集中管理。
 
-### Deep Research (v2.8)
+### Deep Research (v2.11.0)
 
-13 個 Agent 的研究團隊。模式：full、quick、review、lit-review、fact-check、socratic、systematic-review。完整 agent 名單與產出物：見 ARCHITECTURE.md §3。
+13 個 Agent 的研究團隊。模式：full、quick、review、lit-review、three-way-scan、fact-check、socratic、systematic-review。完整 agent 名單與產出物：見 ARCHITECTURE.md §3。
 
-### Academic Paper (v3.0)
+### Academic Paper (v3.2.0)
 
-12 個 Agent 的論文撰寫 pipeline。模式：full、plan、outline-only、revision、revision-coach、abstract-only、lit-review、format-convert、citation-check、disclosure。輸出：MD + DOCX（Pandoc 可用時）+ LaTeX（APA 7.0 `apa7` class / IEEE / Chicago）→ tectonic 編譯 PDF。完整 agent 名單與各 phase 職責：見 ARCHITECTURE.md §3。
+12 個 Agent 的論文撰寫 pipeline。模式：full、plan、outline-only、revision、revision-coach、abstract-only、lit-review、format-convert、citation-check、disclosure、rebuttal-audit。輸出：MD + DOCX（Pandoc 可用時）+ LaTeX（APA 7.0 `apa7` class / IEEE / Chicago）→ tectonic 編譯 PDF。完整 agent 名單與各 phase 職責：見 ARCHITECTURE.md §3。
 
-### Academic Paper Reviewer (v1.8)
+### Academic Paper Reviewer (v1.10.0)
 
 7 個 Agent 的多視角審查，搭配 **0-100 品質量表**。模式：full、re-review、quick、methodology-focus、guided、calibration。**決策對照：** ≥80 接受、65-79 小修、50-64 大修、<50 退稿。第一輪審查團隊 vs. 精簡再審團隊的分界：見 ARCHITECTURE.md §3 Stage 3 / Stage 3'。
 
-### Academic Pipeline (v3.7)
+### Academic Pipeline (v3.13.0)
 
 10 階段調度器，含誠信驗證、兩階段審查、蘇格拉底指導、協作品質評估。Pipeline 保證：每個階段都需使用者確認 checkpoint；誠信驗證（Stage 2.5 + 4.5）不可跳過；R&R 追溯矩陣（Schema 11）獨立驗證作者修訂宣稱。v3.4 新增 Compliance Agent（PRISMA-trAIce + RAISE）於 Stage 2.5 / 4.5。v3.5 新增 **協作深度觀察員**（`collaboration_depth_agent`，僅諮詢性質、永不阻擋流程）於每一次 FULL/SLIM checkpoint 與 pipeline 完成時。MANDATORY 誠信閘門（2.5 / 4.5）明確跳過觀察員，避免稀釋合規檢查。理論基礎：Wang & Zhang (2026), IJETHE 23:11。逐階段矩陣（agent、產出物、閘門）：見 ARCHITECTURE.md §3。
 
@@ -307,23 +309,45 @@ https://github.com/Imbad0202/academic-research-skills
 
 ## 貢獻者
 
-**吳政宜** (Cheng-I Wu) — 原作者與上游 [`Imbad0202/academic-research-skills`](https://github.com/Imbad0202/academic-research-skills) 維護者。所有 workflow 內容、agent prompts、驗證腳本都是他的。
+**吳政宜** (Cheng-I Wu) — 作者與維護者
 
-**[timpara](https://github.com/timpara)** — Fork 維護者（[`timpara/academic-research-skills`](https://github.com/timpara/academic-research-skills)）與本 OpenCode 移植版維護者。
+**[aspi6246](https://github.com/aspi6246)** — 貢獻者。v3.1 優化靈感來自 [Claude-Code-Skills-for-Academics](https://github.com/aspi6246/Claude-Code-Skills-for-Academics)：唯讀約束模式、Anti-Pattern 作為一等公民設計、認知框架方法（教「如何思考」而非只有步驟）、精簡 skill 尺寸哲學。
 
-**[aspi6246](https://github.com/aspi6246)** — 上游貢獻者。v3.1 優化靈感來自 [Claude-Code-Skills-for-Academics](https://github.com/aspi6246/Claude-Code-Skills-for-Academics)：唯讀約束模式、Anti-Pattern 作為一等公民設計、認知框架方法、精簡 skill 尺寸哲學。
+**[mchesbro1](https://github.com/mchesbro1)** — 貢獻者。最初提出並撰寫了 IS Basket of 8 期刊清單（[Issue #5](https://github.com/Imbad0202/academic-research-skills/issues/5)）。
 
-**[mchesbro1](https://github.com/mchesbro1)** — 上游貢獻者。最初提出並撰寫了 IS Basket of 8 期刊清單。
+**[cloudenochcsis](https://github.com/cloudenochcsis)** — 貢獻者。將 IS 章節從 *Basket of 8* 擴充為完整的 *Senior Scholars' Basket of 11*，補上 *Decision Support Systems*、*Information & Management*、*Information and Organization*（[Issue #7](https://github.com/Imbad0202/academic-research-skills/issues/7)、[PR #8](https://github.com/Imbad0202/academic-research-skills/pull/8)）。資料來源：[AIS Senior Scholars' List of Premier Journals](https://aisnet.org/research/seniorscholarsbasket/)。
 
-**[cloudenochcsis](https://github.com/cloudenochcsis)** — 上游貢獻者。將 IS 章節從 *Basket of 8* 擴充為完整的 *Senior Scholars' Basket of 11*。
+**[eltociear](https://github.com/eltociear)**（Ikko Eltociear Ashimine）— 貢獻者。翻譯了日文版 README（[`README.ja-JP.md`](README.ja-JP.md)）（[PR #161](https://github.com/Imbad0202/academic-research-skills/pull/161)）。
 
-**[eltociear](https://github.com/eltociear)**（Ikko Eltociear Ashimine）— 上游貢獻者。翻譯了日文版 README。
-
-**[xpfo-go](https://github.com/xpfo-go)**（xpfo）— 上游貢獻者。翻譯了簡體中文版 README。
+**[xpfo-go](https://github.com/xpfo-go)**（xpfo）— 貢獻者。翻譯了簡體中文版 README（[`README.zh-CN.md`](README.zh-CN.md)）（[PR #181](https://github.com/Imbad0202/academic-research-skills/pull/181)）。
 
 ---
 
 ## 更新紀錄
+
+### v3.13.0（2026-06-18）— Hook 可移植性、provider-agnostic 驗證、guard 正確性
+
+> 一個 minor release，強化安裝／執行面並擴展跨模型範圍。**修正：** 寫入範圍 guard 在 git-clone + symlink 安裝佈局下不再誤擋使用者自己的 `CLAUDE.md`（#459，收掉 #448/#449 的殘餘一半——`CLAUDE.md` 是文件而非承載 enforcement 的檔案，故移出 infra 保護清單，所有承載檔案仍受保護）；Windows Python hook 可移植性 + 無 Python 時優雅降級，改由跨平台 `hooks/run_guard.sh` launcher 啟動，會拒絕 0-byte 的 Microsoft Store `python3` stub 且不再洗 hook log（#454）；`draft_writer` dual-phase static union 文件化 + Windows POSIX-safe 路徑匹配（#451）。**新增：** provider-agnostic 跨模型驗證，接受 OpenAI 相容端點（MiMo、DeepSeek、自架）與 grounded first-party OpenAI 並存，且後者絕不被靜默降級（#455）；opt-in 的 Socratic 鄰近 framing probe（借自 STORM 的視角擴展，`ARS_SOCRATIC_ADJACENT_PROBE=1`，預設 OFF，純 prose-layer——`deep-research` 2.10.0 → 2.11.0）（#461）。`academic-pipeline` 隨 suite 至 v3.13.0；`academic-paper` 與 `academic-paper-reviewer` 不變。逐 issue 細節見 `CHANGELOG.md`。
+
+### v3.12.1（2026-06-15）— 審稿回覆分流模式（PR #433 整合）
+
+> 一個 patch release，依 ARS 的模式化架構，把一份外部貢獻中真正具新意的部分收進既有 skill 成為模式。**新模式：** `deep-research` `three-way-scan` —— 介於 `quick` 與 `lit-review` 之間的輕量 WHY/HOW/WHAT 論文比較分流，產出逐論文短清單加跨論文統合（`deep-research` 2.9.4 → 2.10.0）；`academic-paper` `rebuttal-audit` —— 對作者既有的 rebuttal／回覆草稿，比對審稿意見做獨立的諮詢式 QA（逐條覆蓋表 + 缺口清單 + 語氣／證據／誤讀風險旗標），它不產生任何內容，且獨立呼叫時明確抑制 Schema 11／Material Passport 寫入／`ready_to_submit`（由帶 mutation 覆蓋的 `check_rebuttal_audit_guard()` lint 強制）；另含 `revision-coach` 範圍擴展到反駁／不同意姿態與非期刊情境，以及 `/ars-3w` + `/ars-rebuttal-audit` 斜線指令。依輸入形狀路由：審稿意見加草稿 → `rebuttal-audit`；僅意見 → `revision-coach`。整合自 [@Yaobin29](https://github.com/Yaobin29) 的 [PR #433](https://github.com/Imbad0202/academic-research-skills/pull/433)。Suite 模式數 25 → 27（仍 4 個 skill）。逐 issue 細節見 `CHANGELOG.md`。
+
+### v3.12.0（2026-06-08）— Kong 自動研究功能線：實驗來源、圖表保真、跨論文矛盾、部分證據拆解
+
+> 一個 minor release，落地 Kong et al.（2026，arXiv:2605.18661）自動研究功能線，以及部分證據陷阱的拆解工作，每項都已各自審查並 merge。**新功能：** 實驗來源登錄 + 宣稱對實驗對齊 —— 為實驗支撐的宣稱建立 schema-first 的證據帳本層，只做登錄與對齊（學者在外部跑實驗，ARS 從不執行）（#260）；圖表保真 gate，查驗 caption 的詮釋是否從資料推得、論文是否拿該圖表佐證它真正支撐的宣稱（#261）；結構化的跨論文矛盾盤點，把已評估的論文對列舉出來供學者確認（#262）；以及在引用判定（#213）與編輯統合（#214）兩層都先做子宣稱拆解再判定，於兩層收斂 §F.3.2 部分證據陷阱。**引導與詮釋層：** 對產報告的審稿人加上精簡輸出 + 抗壓邊界強化（#274）；同源／rubric-aware 校準的認識論註記（#273）；把檢索內容的指令／資料邊界訂為常設原則（#367）。**負面範圍：** Kong META（#255）收尾，在 `POSITIONING.md` 加「拒絕機制」段落列舉 ARS 不做的五種自主機制，外加兩份 Tier D 設計教訓文件。**發版紀律 lint：** version-consistency 不變量 5–7（#357）與 ARCHITECTURE 元件版號稽核（#345）。另含跨模型 grounding guard（#346 / #349 / #351）、引用 gate 快取鍵與 rationale 上界（#359 / #360 / #361）、eval 黃金集（#250）、ACL/EMNLP 揭露重新接地（#242）等正確性修正。新增的 schema、manifest 欄位與所有不變量皆為增量、向後相容。`academic-pipeline` 隨 suite 升至 v3.12.0；其餘三個 skill 版號不變。逐 issue 細節見 `CHANGELOG.md`。
+
+### v3.11.1（2026-06-06）— 出貨後正確性、強化與來源修正彙整
+
+> 一個 patch release，彙整 v3.11.0 出貨後浮現的修正，每項都已各自審查並 merge：把跨模型同意 gate 擴展到 integrity-verification + collaboration-depth 路徑（#322）、每筆 entry 的 OpenAlex + Crossref backfill 平行化（#138），以及橫跨引用存在性 gate、v3.10 政策層、eval harness、領域證據 profile、#310 安全邊界邊角案例的七項正確性/強化修正（#323 / #327 / #328 / #329 / #331 / #332 / #333）—— 其中兩項是 P1（#327 no-handoff 路徑上的領域 profile 啟動、#328 eval harness 的 per-class 門檻 gate）。無新功能、無破壞性 schema 變更。逐 issue 細節見 `CHANGELOG.md`。
+
+### v3.11.0（2026-06-04）— 確定性引用查驗 gate（#182）
+
+> 新增一道**確定性的引用存在性查驗 gate**，獨立於 LLM 同儕審查運作。每筆引用都會比對最多四個書目索引（Semantic Scholar、OpenAlex、Crossref，以及新增的 **arXiv resolver**，`scripts/arxiv_client.py`，不需 API key），把每筆引用的 `lookup_verified` 狀態（`{true, false, unresolvable}`）寫進統一彙整。捏造、帶著查不到的 DOI/arXiv ID 的引用，因此被 lookup 偵測標示出來（在使用者選用 strict 時才升級為終止），而非寄望審查 agent 注意到。這道 gate **沿用 v3.10 `terminal_policies` 的 opt-in 模型**：偵測一律執行，但 `lookup_verified == false` 的列只有在使用者選用 `terminal_policies.citation_existence == strict` 時才是終止性的；預設行為是 advisory、可用 `/ars-mark-read` 認可。`false` 的定義刻意**收窄到 ID-keyed unmatched**（一次以精確 DOI/arXiv 查驗、卻證實查不到），因此正當但未被索引的人文 / 非英語 / 區域期刊引用會落在 `unresolvable`、永不阻擋（這是文件中載明的「精確優先於召回」取捨）。本版另含持久化 SQLite 查驗 cache（`~/.cache/ars/verification.db`，90 天 TTL）搭配 `/ars-cache-invalidate` 指令、獨立的 `verification_gate` API 與 `verify_passport.py` CLI，以及把 v3.9.0 污染三角驗證矩陣擴成四索引（k=0..4，全屬 advisory）。`academic-pipeline` 追 suite 至 v3.11.0，其餘三個 skill 版號不變。規格：`docs/design/2026-05-21-v3.10-182-promote-citation-gate-spec.md`（§0 amendment + C-V6）。
+
+### v3.10.0（2026-06-01）— 三角驗證政策層、Kong 綜述採納、評測 harness、scoped-write guard
+
+> Minor release，打包數項工作：可選用的污染三角驗證 **terminal 政策層**（#127，預設引用行為與 v3.9.0 byte-equivalent）；**Kong et al. 2026 綜述採納**，包含 Rebuttal Commitment Ledger（#256/#266/#268/#269）與依學門的 domain evidence profile（#259）；**v3.10 量測基建**，通用化評測 gold set 加 ranking-lift CI gate（#184）；**scoped-write guard MVP**（#134），一個 deterministic `PreToolUse` hook，把 23 個單一 phase 的 subagent 圍進各自的 phase 目錄、並禁用它們的 Bash（改用 Grep/Glob 與結構化編輯工具）；`/ars-mark-read` plugin 指令（#190）加一個 broken-on-arrival 修正（#195）；簡體中文 README（#185）；以及 CI 強化（#156/#155）。`academic-paper` 升至 v3.2.0、`academic-paper-reviewer` 升至 v1.10.0，反映 Commitment Ledger 與 domain profile 的新增功能；`academic-pipeline` 追 suite 至 v3.10.0。預設 skill 行為不變，除非使用者選用 strict 政策模式；唯一 default-on 的改動是 #134 guard，它約束的是被圍起來的 subagent，不是面向使用者的產出。
 
 ### v3.9.4.2（2026-05-19）— PR #149 CI 紀律 gate post-ship hotfix（codex post-ship）
 
@@ -364,7 +388,7 @@ https://github.com/Imbad0202/academic-research-skills
 - **Finalizer §5 MED-WARN advisory row**：annotation `[CLAIM-AUDIT-TOOL-FAILURE-UNCITED — <fault-class>]`，gate 通過（retry-next-pass 為補救手段）。Formatter REFUSE list 不變 — UAF 是 advisory。
 - **Pipeline 整合**（`scripts/claim_audit_pipeline.py`）：line 1211-1224 的 swallow site 移除；`JudgeInvocationError` 改 emit UAF row + `continue` 到下個 (sentence, manifest) pair。`constraint_violations[]` 不會再被假 NOT_VIOLATED 污染。
 - **Tests**：新增 18 筆（15 筆 schema/lint TSUAFUncitedAuditFailureInvariants + 3 筆 pipeline integration TP23UncitedJudgeOutageEmitsUAF）。Baseline 694 → 712 tests、0 regression。
-- **Agent doc**（`academic-pipeline/agents/claim_ref_alignment_audit_agent.md`）：Output emission 表格新增第七列；Error handling 表格從 3 種 surface 擴成 4 種，新增 uncited 路徑 UAF 列。
+- **Agent doc**（`skills/academic-pipeline/agents/claim_ref_alignment_audit_agent.md`）：Output emission 表格新增第七列；Error handling 表格從 3 種 surface 擴成 4 種，新增 uncited 路徑 UAF 列。
 
 ### v3.8.0（2026-05-16）— L3 Claim-Faithfulness Locator + Audit（配對 milestone）
 
@@ -378,13 +402,13 @@ https://github.com/Imbad0202/academic-research-skills
 - **#105 — v3.7.3 contamination_signals 回填遷移工具**（2026-05-15）：`scripts/migrate_literature_corpus_to_v3_7_3.py` 對 v3.7.3 前的 passport 反向計算兩個 contamination signals 並補上。
 - **#115 — Semantic Scholar client 成熟度**（2026-05-15）：`scripts/semantic_scholar_client.py` 加 1 req/s throttle（偵測到 `S2_API_KEY` 時降到 0.1s）、URLError 觸發的 outage latch、以及 `reset_outage_latch()` 給跨 passport 的長執行批次清算用。
 
-### v3.7.0（2026-05-05）— Claude Code Plugin 打包
+### v3.7.0（2026-05-05）— OpenCode Plugin 打包
 
-> Plugin 打包升級：ARS 現可在 Claude Code CLI / VS Code / JetBrains 一行裝（`/plugin marketplace add Imbad0202/academic-research-skills` + `/plugin install academic-research-skills`）。原本的 `git clone + symlink 到 ~/.claude/skills/` 安裝流程不變、繼續支援；雙軌都是一級公民。
+> Plugin 打包升級：ARS 現可在 OpenCode CLI / VS Code / JetBrains 一行裝（`/plugin marketplace add Imbad0202/academic-research-skills` + `/plugin install academic-research-skills`）。原本的 `git clone + symlink 到 ~/.claude/skills/` 安裝流程不變、繼續支援；雙軌都是一級公民。
 
 - **Plugin manifest 與 marketplace metadata**（Phase 1，PR #68）：`.claude-plugin/plugin.json` 宣告整個 suite（4 個 skill 透過 `skills/` 目錄相對 symlink 自動探索）；`.claude-plugin/marketplace.json` 註冊 plugin，使單一 GitHub-hosted endpoint 同時提供 marketplace listing 與 plugin 來源。README、`README.zh-TW.md`、`docs/SETUP.md` 都加入雙軌安裝指引。
 - **10 個 slash command** 在 `commands/ars-*.md`（Phase 2.1，PR #69）將 `MODE_REGISTRY.md` 的條目對映到 `/ars-<mode>` 觸發。每個 command frontmatter 釘住模型路由：`opus` 給 `full` 與 `revision-coach`（架構與審稿解讀深度），`sonnet` 給其他 8 個。任何情境不用 Haiku。
-- **3 個 plugin-shipped agent** 在 `agents/*_agent.md`（Phase 2.1，PR #69）以相對 symlink 指向 `deep-research/agents/` 內 v3.6.7 已 hardened 的下游 agent：`synthesis_agent`、`research_architect_agent`、`report_compiler_agent`。底線檔名保留以對齊 `scripts/check_v3_6_7_pattern_protection.py` hard-pin 路徑與 INV-3 manifest-confined Clause 1 不變式。Symlink（不複製）維持 single source of truth，避免 v3.6.7 §6 inversion sweep + INV-1/2/3 lint 已關閉的 Pattern C3 攻擊面再開。
+- **3 個 plugin-shipped agent** 在 `agents/*_agent.md`（Phase 2.1，PR #69）以相對 symlink 指向 `skills/deep-research/agents/` 內 v3.6.7 已 hardened 的下游 agent：`synthesis_agent`、`research_architect_agent`、`report_compiler_agent`。底線檔名保留以對齊 `scripts/check_v3_6_7_pattern_protection.py` hard-pin 路徑與 INV-3 manifest-confined Clause 1 不變式。Symlink（不複製）維持 single source of truth，避免 v3.6.7 §6 inversion sweep + INV-1/2/3 lint 已關閉的 Pattern C3 攻擊面再開。（#413 起改為真實 byte-identical 複本：相對 symlink 在無 `core.symlinks` 的 Windows checkout 與 zip 下載安裝會壞；single-source 保證改由 `scripts/check_agents_mirror_sync.py` byte-equality CI lint 承接。）
 - **`model: inherit`** 加在這三個 source agent frontmatter 上。選 inherit 而非 pin `sonnet` 是為了讓 Opus session 跑 ARS full pipeline 時 agent 仍是 Opus（不被降）。使用者的 `~/.claude/hooks/warn-agent-no-model.sh` PreToolUse hook 在派工邊界已 gate Haiku，所以 inherit 解析到的是已經沒 Haiku 的模型。
 - **SessionStart announce hook** 在 `hooks/hooks.json` + `scripts/announce-ars-loaded.sh`（Phase 2.2，PR #70）。Plugin 載入時，hook 把 10 個 slash command、3 個 plugin agent、token 預算指引以 `additionalContext` 注入 LLM 第一輪。`startup` 與 `clear` 拿完整 announce；`resume` 與 `compact` 只拿一行確認，避免每次 resume 都燒 context。Bash 3.2 兼容 — macOS stock `/bin/bash` 直接跑，不需 `brew install bash`。
 - **Phase 2.2 範圍縮減**：原本規劃的 `SubagentStop → run_codex_audit.sh` codex audit hook 在 v3.7.0 被排除，因為 (a) contract gap：SubagentStop payload 沒帶 stage / deliverable，wrapper 必要參數無法從 hook 推出；(b) invoker 邊界：`run_codex_audit.sh` lines 4–7 明禁同 session in-LLM 呼叫，PostToolUse 在產出 deliverable 的 LLM session 內觸發。真正的 audit-hook 整合留到後續版本，等 ARS 有 stage / deliverable propagation contract 再做。詳見 `docs/design/2026-04-30-ars-v3.7.0-plugin-packaging-roadmap.md` Update note 2026-05-05（Phase 2.2 scope reduction）。
@@ -416,9 +440,9 @@ https://github.com/Imbad0202/academic-research-skills
 
 ### v3.6.5（2026-04-27）— Material Passport `literature_corpus[]` Consumer 整合
 
-- **Phase 1 兩個文獻 consumer** 接上：`deep-research/agents/bibliography_agent.md` 與 `academic-paper/agents/literature_strategist_agent.md`。當 passport 帶有非空 `literature_corpus[]` 時，兩者都走相同的五步 **corpus-first、search-fills-gap** 流程，並遵守相同的四條 Iron Rule（Same criteria / No silent skip / No corpus mutation / Graceful fallback on parse failure）。
+- **Phase 1 兩個文獻 consumer** 接上：`skills/deep-research/agents/bibliography_agent.md` 與 `skills/academic-paper/agents/literature_strategist_agent.md`。當 passport 帶有非空 `literature_corpus[]` 時，兩者都走相同的五步 **corpus-first、search-fills-gap** 流程，並遵守相同的四條 Iron Rule（Same criteria / No silent skip / No corpus mutation / Graceful fallback on parse failure）。
 - **PRE-SCREENED 可重現區塊** 進 Search Strategy 報告：列出已納入／排除／略過的 corpus entry，附 F3 zero-hit 註解與 F4a–F4f provenance 報告（針對 `obtained_via` / `obtained_at` 部分宣告情境）。`final_included = pre_screened_included[] ∪ external_included[]` 維持 neutral — bibliography entry 與 literature matrix row 不掛 provenance 標籤。
-- **Consumer 協定參考文件** 在 `academic-pipeline/references/literature_corpus_consumers.md`，包含 PRE-SCREENED 模板、BAD/GOOD 範例、四條 Iron Rule 與 per-consumer 讀取指示。
+- **Consumer 協定參考文件** 在 `skills/academic-pipeline/references/literature_corpus_consumers.md`，包含 PRE-SCREENED 模板、BAD/GOOD 範例、四條 Iron Rule 與 per-consumer 讀取指示。
 - **CI lint** `scripts/check_corpus_consumer_protocol.py` 透過 manifest 驅動的 consumer 清單（`scripts/corpus_consumer_manifest.json`）強制九條協定不變式。
 - **Schema 9 caveat 退役**：`shared/handoff_schemas.md` 移除 v3.6.4「Consumer-side integration deferred to v3.6.5+」一行，改成指向 consumer 協定的 backpointer。
 - 採 presence-based 啟動，不變更 schema、不引入新 env flag。Parse 失敗 fallback 到 external-DB-only flow，並 surface `[CORPUS PARSE FAILURE]`。`citation_compliance_agent` 的 corpus 整合延後（目標版本將於 v3.8 後再訂）。
@@ -427,7 +451,7 @@ https://github.com/Imbad0202/academic-research-skills
 ### v3.6.4（2026-04-25）— Material Passport `literature_corpus[]` 輸入埠
 
 - **Schema 9 新增 `literature_corpus[]`** 選填欄位作為使用者文獻的輸入埠。每筆 entry 符合 `shared/contracts/passport/literature_corpus_entry.schema.json`（CSL-JSON authors / year / title / source_pointer，加上 PRIVATE 選填的 `abstract` / `user_notes`）。
-- **語言中性的 adapter 契約** 放在 `academic-pipeline/references/adapters/overview.md`：任何語言寫的程式都能讀使用者自己的 corpus source 並產出符合契約的 `passport.yaml` + `rejection_log.yaml`。Entry-level 錯誤 fail-soft、adapter-level 錯誤 fail-loud、輸出順序確定。
+- **語言中性的 adapter 契約** 放在 `skills/academic-pipeline/references/adapters/overview.md`：任何語言寫的程式都能讀使用者自己的 corpus source 並產出符合契約的 `passport.yaml` + `rejection_log.yaml`。Entry-level 錯誤 fail-soft、adapter-level 錯誤 fail-loud、輸出順序確定。
 - **三個 reference Python adapter** 在 `scripts/adapters/`：`folder_scan.py`（檔案系統的 PDF 資料夾）、`zotero.py`（Better BibTeX JSON export）、`obsidian.py`（vault frontmatter）。僅供起點參考；非 reference source 預期使用者自行實作 adapter。
 - **Rejection log 契約** 在 `shared/contracts/passport/rejection_log.schema.json`，採用封閉 enum 的 categorical reason 值；永遠輸出（無 rejection 時為空）。
 - **CI 把關**：`scripts/check_literature_corpus_schema.py` 驗 schemas + adapter examples；`scripts/sync_adapter_docs.py --check` 防 schema→docs drift；新 `pytest.yml` workflow 在 path-filtered 觸發跑 `scripts/adapters/tests/`。
@@ -436,10 +460,10 @@ https://github.com/Imbad0202/academic-research-skills
 
 ### v3.6.3（2026-04-23）— 選用式 Passport 重置邊界
 
-- **Opt-in passport 重置邊界**（`ARS_PASSPORT_RESET=1`）。把每個 FULL checkpoint 提升為 context 重置邊界。新增 `resume_from_passport=<hash>` 模式，讓使用者在新的 Claude Code session 單憑 Material Passport ledger 就恢復 pipeline，不重播先前對話。`systematic-review` 模式 flag ON 時，每個 FULL checkpoint 一律強制重置；其他模式視重置為 flag 開啟後的強預設。Flag OFF 時 byte-for-byte 維持 pre-v3.6.3 行為。
+- **Opt-in passport 重置邊界**（`ARS_PASSPORT_RESET=1`）。把每個 FULL checkpoint 提升為 context 重置邊界。新增 `resume_from_passport=<hash>` 模式，讓使用者在新的 OpenCode session 單憑 Material Passport ledger 就恢復 pipeline，不重播先前對話。`systematic-review` 模式 flag ON 時，每個 FULL checkpoint 一律強制重置；其他模式視重置為 flag 開啟後的強預設。Flag OFF 時 byte-for-byte 維持 pre-v3.6.3 行為。
 - Schema 9 新增 append-only `reset_boundary[]` ledger，兩種 entry kind（`kind: boundary` + `kind: resume`）。Hash 用 JSON Canonical Form + SHA-256，搭配 canonical placeholder 處理自我參照問題。選填 `pending_decision` 負責 MANDATORY 分支決策。
 - 新 CI lint `scripts/check_passport_reset_contract.py`：任何提到 flag 的檔案都必須指向權威協議文件。
-- 協議文件：`academic-pipeline/references/passport_as_reset_boundary.md`。
+- 協議文件：`skills/academic-pipeline/references/passport_as_reset_boundary.md`。
 - `docs/PERFORMANCE.zh-TW.md` 更新 long-running session 指引。
 - 無破壞性變更，flag 預設關閉。
 
@@ -452,7 +476,7 @@ v3.6.2 引入 Schema 13 sprint contract 與 hard-gate 編排，強制審稿人�
 - **合成者三步機械協議**：建構跨審稿矩陣 → 依 panel-relative quantifier + 認可表達式詞彙評估每條 `failure_condition` → 用 `severity` 決優先。禁止操作清單寫在 `editorial_synthesizer_agent`。
 - **出貨兩份審稿模板**：`shared/contracts/reviewer/full.json`（panel 5）與 `shared/contracts/reviewer/methodology_focus.json`（panel 2）。`reviewer_re_review`、`reviewer_calibration`、`reviewer_guided` 三個 mode 在 schema enum 中保留，但 v3.6.2 不出 template，繼續沿用 pre-v3.6.2 行為；`reviewer_quick` 完全排除於 enum 外。
 - `academic-paper-reviewer` SKILL 版本：`1.8.1 → 1.9.0`。`academic-pipeline` SKILL 版本：`3.5.1 → 3.6.2`（suite-version invariant）。Suite 版本升至 `3.6.2`。
-- 詳見設計稿 [`docs/design/2026-04-23-ars-v3.6.2-sprint-contract-design.md`](docs/design/2026-04-23-ars-v3.6.2-sprint-contract-design.md) 與協定 [`academic-paper-reviewer/references/sprint_contract_protocol.md`](academic-paper-reviewer/references/sprint_contract_protocol.md)。
+- 詳見設計稿 [`docs/design/2026-04-23-ars-v3.6.2-sprint-contract-design.md`](docs/design/2026-04-23-ars-v3.6.2-sprint-contract-design.md) 與協定 [`skills/academic-paper-reviewer/references/sprint_contract_protocol.md`](skills/academic-paper-reviewer/references/sprint_contract_protocol.md)。
 
 ### v3.5.1（2026-04-22）— 選用式 Socratic 誠實探測
 
@@ -482,7 +506,7 @@ v3.5.1 新增 Socratic Mentor 的選用式誠實探測（設定 `ARS_SOCRATIC_RE
 ### v3.3.6 (2026-04-15) — README 精簡 + ARCHITECTURE 文件
 
 - 新增 `docs/ARCHITECTURE.md` 作為 pipeline 結構的單一來源（流程、矩陣、資料存取、依賴圖、品質閘門、模式）。透過 PR #18 合併入 main。
-- 新增 `docs/SETUP.md` / `docs/SETUP.zh-TW.md`（前置需求、API key、Pandoc/tectonic、跨模型驗證、四種安裝方式），以及 `docs/PERFORMANCE.md` / `docs/PERFORMANCE.zh-TW.md`（token 預算、建議 Claude Code 設定）。README 以連結取代內嵌。
+- 新增 `docs/SETUP.md` / `docs/SETUP.zh-TW.md`（前置需求、API key、Pandoc/tectonic、跨模型驗證、四種安裝方式），以及 `docs/PERFORMANCE.md` / `docs/PERFORMANCE.zh-TW.md`（token 預算、建議 OpenCode 設定）。README 以連結取代內嵌。
 - 精簡 README：移除 ASCII pipeline 圖與 16 項 key-feature 清單（已被 ARCHITECTURE.md 取代）；Skill 詳細資訊維持版本號錨點，讀者跳到 ARCHITECTURE.md §3 看各 agent 名單。
 - 註記：沒有任何 skill 的功能變動，純文件重構。suite version 升級至 `3.3.6`。
 
@@ -541,7 +565,7 @@ v3.5.1 新增 Socratic Mentor 的選用式誠實探測（設定 `ARS_SOCRATIC_RE
 
 ### v3.1.1 (2026-04-09) — 資訊系統 Senior Scholars' Basket of 11
 
-外部貢獻：[@mchesbro1](https://github.com/mchesbro1) 最初提出並撰寫了 IS Basket of 8 期刊清單（[Issue #5](https://github.com/Imbad0202/academic-research-skills/issues/5)）；[@cloudenochcsis](https://github.com/cloudenochcsis) 將其擴充為完整的 Senior Scholars' Basket of 11（[Issue #7](https://github.com/Imbad0202/academic-research-skills/issues/7)、[PR #8](https://github.com/Imbad0202/academic-research-skills/pull/8)）。更新 `academic-paper-reviewer/references/top_journals_by_field.md` 第 7 節，補上 *Decision Support Systems*、*Information & Management*、*Information and Organization*。資料來源：[AIS Senior Scholars' List of Premier Journals](https://aisnet.org/page/SeniorScholarListofPremierJournals)。
+外部貢獻：[@mchesbro1](https://github.com/mchesbro1) 最初提出並撰寫了 IS Basket of 8 期刊清單（[Issue #5](https://github.com/Imbad0202/academic-research-skills/issues/5)）；[@cloudenochcsis](https://github.com/cloudenochcsis) 將其擴充為完整的 Senior Scholars' Basket of 11（[Issue #7](https://github.com/Imbad0202/academic-research-skills/issues/7)、[PR #8](https://github.com/Imbad0202/academic-research-skills/pull/8)）。更新 `skills/academic-paper-reviewer/references/top_journals_by_field.md` 第 7 節，補上 *Decision Support Systems*、*Information & Management*、*Information and Organization*。資料來源：[AIS Senior Scholars' List of Premier Journals](https://aisnet.org/research/seniorscholarsbasket/)。
 
 ### v3.1 (2026-04-06) — 抗 Context Rot + 認知框架 + 精簡尺寸
 
@@ -583,7 +607,7 @@ v3.5.1 新增 Socratic Mentor 的選用式誠實探測（設定 `ARS_SOCRATIC_RE
 
 ### v2.9 (2026-03-27) — 風格校準 + 寫作品質檢查
 - **風格校準**（academic-paper intake Step 10，可選）：提供 3+ 篇過去論文，pipeline 會學習你的寫作風格 — 句子節奏、詞彙偏好、引用整合方式。寫作時作為軟性指引；學科規範永遠優先。優先級系統：學科規範（硬性）> 期刊慣例（強）> 個人風格（軟性）。見 `shared/style_calibration_protocol.md`
-- **寫作品質檢查**（`academic-paper/references/writing_quality_check.md`）：寫作品質 checklist，於初稿自我審查時套用。5 大類：AI 高頻詞彙警告（25 個詞）、標點模式控制（em dash ≤3）、開頭廢話偵測、結構模式警告（三項列舉強迫症、均勻段落、同義詞循環）、句子長度變化檢查。這是好寫作規則 — 不是逃避偵測
+- **寫作品質檢查**（`skills/academic-paper/references/writing_quality_check.md`）：寫作品質 checklist，於初稿自我審查時套用。5 大類：AI 高頻詞彙警告（25 個詞）、標點模式控制（em dash ≤3）、開頭廢話偵測、結構模式警告（三項列舉強迫症、均勻段落、同義詞循環）、句子長度變化檢查。這是好寫作規則 — 不是逃避偵測
 - **Style Profile** 透過 academic-pipeline Material Passport 攜帶（`shared/handoff_schemas.md` Schema 10）
 - **deep-research** report compiler 也可選地消費這兩個功能
 - 版本：academic-paper v2.5、deep-research v2.4、academic-pipeline v2.7
@@ -595,7 +619,7 @@ v3.5.1 新增 Socratic Mentor 的選用式誠實探測（設定 `ARS_SOCRATIC_RE
   - **Adaptive Intensity**：追蹤 commitment 準確率，動態調整挑戰頻率
   - **Self-Calibration Signal (S5)**：新收斂訊號，追蹤使用者在對話中是否展現自我校準能力
   - **SCR Switch**：使用者可隨時說「跳過預測」關閉 SCR，或「恢復預測」重新開啟，蘇格拉底式提問不受影響
-- `deep-research/references/socratic_questioning_framework.md`：新增 SCR Overlay Protocol，對映 SCR 三階段到蘇格拉底功能
+- `skills/deep-research/references/socratic_questioning_framework.md`：新增 SCR Overlay Protocol，對映 SCR 三階段到蘇格拉底功能
 - 新增 `CHANGELOG.md`
 
 ### v2.7 (2026-03-09) — 誠信驗證 v2.0：反幻覺全面改版
