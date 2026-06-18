@@ -1,6 +1,6 @@
 # ARS 效能說明
 
-> **建議模型：當前前沿推理模型**（Claude Opus 4.7 / GPT-5 Pro / Gemini 3.1 Pro 或同等級），搭配對應的高階方案。現行前沿模型多採用 adaptive thinking，不需要手動指定 thinking budget。
+> **建議模型：深度模式使用 `kimi-for-coding/k2p7`（Kimi K2.7），輕量模式使用 `vllm/qwen3.6`（本機 Qwen3.6-27B）**，搭配對應的高階方案。現行前沿模型多採用 adaptive thinking，不需要手動指定 thinking budget。
 >
 > 完整學術 pipeline（10 階段）會消耗**大量 token** — 單次完整執行可能超過 200K 輸入 + 100K 輸出 token，視論文長度和修訂輪數而定。請依預算斟酌使用。
 >

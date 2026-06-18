@@ -313,7 +313,7 @@ timeline
            : SC-* mode-gating in check_sprint_contract.py
     v3.7.0 : Claude Code plugin packaging
            : .claude-plugin/{plugin,marketplace}.json + skills/ symlinks
-           : 10 slash commands (commands/ars-*.md, model pinned opus/sonnet, no haiku)
+            : 10 slash commands (commands/ars-*.md, heavy modes on kimi-for-coding/k2p7, lighter modes on vllm/qwen3.6, no low-tier model)
            : 3 plugin agents (agents/, byte-identical copies of v3.6.7-hardened
            :   source — mirror-sync lint since #413, model: inherit)
            : SessionStart announce hook (hooks/hooks.json + announce-ars-loaded.sh)

@@ -69,7 +69,7 @@ This means a citation integrity audit, a peer-review panel, or a claim-faithfuln
  ---
 ```
 
-Model choice in OpenCode is per-session, not per-command. Commands the upstream pinned `opus` for (`/ars-full`, `/ars-reviewer`, `/ars-revision-coach`) should be run in an Opus or comparable session for best results.
+Model choice in OpenCode is per-session, not per-command. Commands the upstream pinned `opus` for (`/ars-full`, `/ars-reviewer`, `/ars-revision-coach`) map to `kimi-for-coding/k2p7` (Kimi K2.7) for depth; lighter commands map to `vllm/qwen3.6` (local Qwen3.6-27B).
 
 ### 2.3 Hook → plugin rewrite
 
@@ -109,7 +109,7 @@ git merge upstream/main
 The following files have port-specific changes that will conflict on every sync. Take **theirs** for content, then re-apply the port-specific changes:
 
 - `skills/<name>/SKILL.md` — re-add `license`, `compatibility`, `allowed-tools` to frontmatter. Body should be upstream's verbatim.
-- `commands/ars-*.md` — replace upstream's `model: sonnet|opus` with `agent: build` and add `compatibility: opencode`. Body should be upstream's verbatim.
+- `commands/ars-*.md` — replace upstream's `model: sonnet|opus` (here, `vllm/qwen3.6` for lighter modes / `kimi-for-coding/k2p7` for depth) with `agent: build` and add `compatibility: opencode`. Body should be upstream's verbatim.
 - `README.md`, `docs/SETUP.md`, `QUICKSTART.md`, `CONTRIBUTING.md` — keep ours. Cherry-pick content updates from upstream's diff as needed.
 - `CHANGELOG.md` — prepend a new `[vX.Y.Z-opencode.N]` entry under the OpenCode-port header explaining what came in.
 

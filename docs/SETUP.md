@@ -90,7 +90,7 @@ If neither happens, see [Troubleshooting](#5-troubleshooting).
 
 ### Model provider
 
-OpenCode picks the model from your session settings, not from skill frontmatter. The upstream Claude Code plugin pinned `model: opus` for some commands (`/ars-full`, `/ars-reviewer`, `/ars-revision-coach`) for depth; in OpenCode, choose a comparable model (Claude 4.7 Opus, GPT-5 Pro, etc.) for those commands and a cheaper model for the rest.
+OpenCode picks the model from your session settings, not from skill frontmatter. The upstream Claude Code plugin pinned `model: opus` for depth on `/ars-full`, `/ars-reviewer`, and `/ars-revision-coach`; in OpenCode, run those on `kimi-for-coding/k2p7` (Kimi K2.7) and lighter commands on `vllm/qwen3.6` (local Qwen3.6-27B).
 
 ### Environment variables
 

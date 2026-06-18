@@ -1,6 +1,6 @@
 # ARS Performance Notes
 
-> **Recommended model: a current frontier reasoning model (Claude Opus 4.7 / GPT-5 Pro / Gemini 3.1 Pro or equivalent)** with **Max plan** (or equivalent configuration). Opus 4.7 uses adaptive thinking; you no longer set a fixed thinking budget.
+> **Recommended model: `kimi-for-coding/k2p7` (Kimi K2.7) for heavy modes and `vllm/qwen3.6` (local Qwen3.6-27B) for lighter modes.** Costs below are anchored to Kimi K2.7 pricing; adjust for your provider.
 >
 > The full academic pipeline (10 stages) consumes a **large amount of tokens** — a single end-to-end run can exceed 200K input + 100K output tokens depending on paper length and revision rounds. Budget accordingly.
 >
@@ -8,7 +8,7 @@
 
 ## Estimated token usage by mode
 
-| Skill / Mode | Input Tokens | Output Tokens | Estimated Cost (Opus 4.7) |
+| Skill / Mode | Input Tokens | Output Tokens | Estimated Cost (Kimi K2.7) |
 |---|---|---|---|
 | `deep-research` socratic | ~30K | ~15K | ~$0.60 |
 | `deep-research` full | ~60K | ~30K | ~$1.20 |

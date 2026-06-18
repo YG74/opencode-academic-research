@@ -90,7 +90,7 @@ uv sync --extra dev
 
 ### 模型選擇
 
-OpenCode 從你的工作階段設定選擇模型，而不是從 skill frontmatter。上游 Claude Code 外掛針對部分指令（`/ars-full`、`/ars-reviewer`、`/ars-revision-coach`）釘選 `model: opus` 以取得深度；在 OpenCode 中，請為這些指令選用同等級模型（Claude 4.7 Opus、GPT-5 Pro 等），其餘可用較便宜模型。
+OpenCode 從你的工作階段設定選擇模型，而不是從 skill frontmatter。上游 Claude Code 外掛針對部分指令（`/ars-full`、`/ars-reviewer`、`/ars-revision-coach`）釘選 `model: opus` 以取得深度；在 OpenCode 中，請為這些指令選用 `kimi-for-coding/k2p7`（Kimi K2.7），其餘輕量指令可用 `vllm/qwen3.6`（本機 Qwen3.6-27B）。
 
 ### 環境變數
 
